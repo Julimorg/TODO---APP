@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_internship/screens/about_screen.dart';
+import 'package:todo_internship/screens/notification.dart';
 import 'package:todo_internship/screens/settings_screen.dart';
 import '../providers/todo_provider.dart';
 import '../widgets/animated_fab.dart';
@@ -143,6 +144,8 @@ class _HomeScreenState extends State<HomeScreen> {
         return TodoListWidget(todos: todoProvider.incompleteTodos);
       case 1:
         return TodoListWidget(todos: todoProvider.completedTodos);
+      case 2:
+        return const NotificationPage();
       default:
         return TodoListWidget(todos: todoProvider.todos);
     }
@@ -165,6 +168,10 @@ class _HomeScreenState extends State<HomeScreen> {
         BottomNavigationBarItem(
           icon: Icon(Icons.check_circle),
           label: 'Completed',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.calendar_month_outlined),
+          label: 'Notification',
         ),
       ],
     );

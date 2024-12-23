@@ -39,7 +39,7 @@ class TodoListWidget extends StatelessWidget {
         ),
       );
     }
-
+    //? Chỉnh ListView và GridView tại đây
     return ListView.builder(
       itemCount: todos.length,
       itemBuilder: (context, index) {
