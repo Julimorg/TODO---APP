@@ -10,13 +10,69 @@ import '../screens/update_todo_screen.dart';
 
 class TodoListWidget extends StatelessWidget {
   final List<TodoModel> todos;
-
-  const TodoListWidget({super.key, required this.todos});
+  final bool isChangeView;
+  const TodoListWidget(
+      {super.key, required this.todos, required this.isChangeView});
 
   @override
   Widget build(BuildContext context) {
+    final TextEditingController _controller =
+        TextEditingController(); //-->Check empty Field
+    Priority _selectedPriority = Priority.low; //--> Priority Tags
+
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    // final primaryColor = Theme.of(context).primaryColor;
+    final changeColor = isDarkMode ? Colors.white : Colors.black;
+
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     todos.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
+    //? Show Alert EmptyField
+    void _showAlertDialog(BuildContext context) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Error!'),
+            content: const Text('The field must not empty!'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    //? Logic check emtpyfield or else
+    void _onSearch() {
+      if (_controller.text.trim().isEmpty) {
+        _showAlertDialog(context);
+      }
+    }
+
+    //? [1] Sử dụng ValueNotiFier để dễ hơn trong việc quản lý trạng thái
+    //? mà không cần setSate hay phải tạo thêm 1 constructor cho widget cha
+    final ValueNotifier<Priority> _priorityNotifier =
+        ValueNotifier(Priority.medium);
+    //? Helper method to get priority color
+    Color _getPriorityColor(Priority priority) {
+      switch (priority) {
+        case Priority.high:
+          return Colors.red;
+        case Priority.medium:
+          return Colors.orange;
+        case Priority.low:
+          return Colors.green;
+      }
+    }
+
+    //? Check Item is Empty
     if (todos.isEmpty) {
       return Center(
         child: Column(
@@ -39,15 +95,157 @@ class TodoListWidget extends StatelessWidget {
         ),
       );
     }
-    //? Chỉnh ListView và GridView tại đây
-    return ListView.builder(
-      itemCount: todos.length,
-      itemBuilder: (context, index) {
-        final todo = todos[index];
-        return TodoItemCard(todo: todo)
-            .animate()
-            .slideX(begin: 1, duration: 300.ms, curve: Curves.easeOut);
-      },
+    //? Search TextField
+    return SizedBox(
+      // color: Colors.amber,
+      height: screenHeight * 1,
+      width: screenWidth * 1,
+      child: SingleChildScrollView(
+        child: Column(children: [
+          Container(
+            margin: const EdgeInsets.only(top: 20, bottom: 10),
+            child: Row(
+              children: [
+                const SizedBox(height: 10),
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(
+                      hintText: 'Search your note here...',
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 16.0),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: changeColor, width: 2.0),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _onSearch,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 13.0, vertical: 13.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  child: const Text('Search'),
+                ),
+              ],
+            ),
+          ),
+          //? [1] Filter Tag
+          Container(
+              width: screenWidth * 1,
+              height: screenHeight * 0.05,
+              // color: Colors.blue,
+              margin: const EdgeInsets.only(top: 10, bottom: 15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ValueListenableBuilder<Priority>(
+                      valueListenable: _priorityNotifier,
+                      builder: (context, selectedPriority, child) {
+                        return Container(
+                            width: screenWidth * 0.78,
+                            height: screenHeight * 0.05,
+                            decoration: BoxDecoration(
+                              // color: Colors.blue,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: changeColor),
+                            ),
+                            child: DropdownButtonFormField<Priority>(
+                              value: _selectedPriority,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 2,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.priority_high,
+                                  color: _getPriorityColor(_selectedPriority),
+                                  size: 20,
+                                ),
+                              ),
+                              items: Priority.values
+                                  .map((priority) => DropdownMenuItem(
+                                        value: priority,
+                                        child: Text(
+                                          priority
+                                              .toString()
+                                              .split('.')
+                                              .last
+                                              .toUpperCase(),
+                                          style: TextStyle(
+                                            color: _getPriorityColor(priority),
+                                            fontWeight: FontWeight.bold,
+                                            // fontSize: 15,
+                                          ),
+                                        ),
+                                      ))
+                                  .toList(),
+                              onChanged: (priority) {
+                                if (priority != null) {
+                                  _priorityNotifier.value = priority;
+                                }
+                              },
+                            ));
+                      }),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: _onSearch,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10.0, vertical: 10.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ),
+                    child: const Text('Filter'),
+                  ),
+                ],
+              )),
+          //TODO Chỉnh ListView và GridView tại đây
+          //TODO Nên làm thêm Lazy Loading Tại Đây
+          SizedBox(
+              height: screenHeight * 0.73,
+              width: screenWidth * 1,
+              child: isChangeView
+                  ? ListView.builder(
+                      itemCount: todos.length,
+                      itemBuilder: (context, index) {
+                        final todo = todos[index];
+                        return TodoItemCard(
+                          todo: todo,
+                          isChangeView: true,
+                        ).animate().slideX(
+                            begin: 1, duration: 300.ms, curve: Curves.easeOut);
+                      },
+                    )
+                  : GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 20,
+                        mainAxisSpacing: 10,
+                      ),
+                      itemCount: todos.length,
+                      itemBuilder: (context, index) {
+                        final todo = todos[index];
+                        return TodoItemCard(
+                          todo: todo,
+                          isChangeView: false,
+                        ).animate().slideX(
+                            begin: 1, duration: 300.ms, curve: Curves.easeOut);
+                      },
+                    )),
+        ]),
+      ),
     );
   }
 }
@@ -75,8 +273,10 @@ class TimeAgo {
 
 class TodoItemCard extends StatelessWidget {
   final TodoModel todo;
+  final bool isChangeView;
 
-  const TodoItemCard({super.key, required this.todo});
+  const TodoItemCard(
+      {super.key, required this.todo, required this.isChangeView});
 
   Color _getPriorityColor(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -298,112 +498,251 @@ class TodoItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     final theme = Theme.of(context);
     final priorityColor = _getPriorityColor(context);
 
     return InkWell(
-      onLongPress: () {
-        _showTodoOptionsBottomSheet(context);
-      },
-      onTap: () {
-        navigateWithFadeTransition(
-          context: context,
-          targetPage: TaskDetailsScreen(todo: todo),
-        );
-      },
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        elevation: 6,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                priorityColor.withOpacity(0.2),
-                theme.cardColor,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: priorityColor, width: 2),
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: priorityColor.withOpacity(0.7),
-                child: Icon(
-                  _getPriorityIcon(),
-                  color: theme.colorScheme.onPrimary,
+        onLongPress: () {
+          _showTodoOptionsBottomSheet(context);
+        },
+        onTap: () {
+          navigateWithFadeTransition(
+            context: context,
+            targetPage: TaskDetailsScreen(todo: todo),
+          );
+        },
+        //? Items Card
+        child: isChangeView
+            ?
+            //? List View for Card
+            Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                elevation: 6,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        priorityColor.withOpacity(0.2),
+                        theme.cardColor,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: priorityColor, width: 2),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: priorityColor.withOpacity(0.7),
+                        child: Icon(
+                          _getPriorityIcon(),
+                          color: theme.colorScheme.onPrimary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    todo.title,
+                                    style:
+                                        theme.textTheme.titleMedium?.copyWith(
+                                      decoration: todo.isCompleted
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                      color: todo.isCompleted
+                                          ? theme.textTheme.bodyMedium?.color
+                                              ?.withOpacity(0.5)
+                                          : theme.textTheme.titleMedium?.color,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Text(
+                                  TimeAgo.format(todo.createdAt),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.textTheme.bodySmall?.color
+                                        ?.withOpacity(0.7),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (todo.description.isNotEmpty)
+                              Text(
+                                todo.description,
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  color: theme.textTheme.bodySmall?.color
+                                      ?.withOpacity(0.7),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: todo.isCompleted,
+                            onChanged: (_) =>
+                                _showToggleConfirmationDialog(context),
+                            activeColor: priorityColor,
+                            checkColor: theme.colorScheme.onPrimary,
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.more_vert),
+                            onPressed: () =>
+                                _showTodoOptionsBottomSheet(context),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            :
+            //? Grid View for Card
+            Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                elevation: 6,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    gradient: LinearGradient(
+                      colors: [
+                        priorityColor.withOpacity(0.2),
+                        theme.cardColor,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: priorityColor, width: 2),
+                  ),
+                  child: Container(
+                    // color: Colors.amber,
+                    width: screenWidth * 0.5,
+                    height: screenHeight * 0.5,
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: Text(
-                            todo.title,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              decoration: todo.isCompleted
-                                  ? TextDecoration.lineThrough
-                                  : null,
-                              color: todo.isCompleted
-                                  ? theme.textTheme.bodyMedium?.color
-                                      ?.withOpacity(0.5)
-                                  : theme.textTheme.titleMedium?.color,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                        const SizedBox(width: 12),
+                        Container(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  //? Icon avatar
+                                  CircleAvatar(
+                                    backgroundColor:
+                                        priorityColor.withOpacity(0.7),
+                                    radius: 15,
+                                    child: Icon(
+                                      _getPriorityIcon(),
+                                      color: theme.colorScheme.onPrimary,
+                                      size: 15,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  //? Display Title of Note
+                                  Expanded(
+                                    child: Text(
+                                      todo.title,
+                                      style:
+                                          theme.textTheme.titleMedium?.copyWith(
+                                        decoration: todo.isCompleted
+                                            ? TextDecoration.lineThrough
+                                            : null,
+                                        color: todo.isCompleted
+                                            ? theme.textTheme.bodyMedium?.color
+                                                ?.withOpacity(0.5)
+                                            : theme
+                                                .textTheme.titleMedium?.color,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  Text(
+                                    TimeAgo.format(todo.createdAt),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.textTheme.bodySmall?.color
+                                          ?.withOpacity(0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              //? Check Note Description emtpy or not
+                              todo.description.isNotEmpty
+                                  ? Text(
+                                      todo.description,
+                                      style:
+                                          theme.textTheme.bodyLarge?.copyWith(
+                                        color: theme.textTheme.bodySmall?.color
+                                            ?.withOpacity(0.7),
+                                        fontSize: 12,
+                                      ),
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                    )
+                                  : Text(
+                                      "Opps! You haven't written anything here!",
+                                      style:
+                                          theme.textTheme.bodyLarge?.copyWith(
+                                        color: theme.textTheme.bodySmall?.color
+                                            ?.withOpacity(0.7),
+                                        fontSize: 12,
+                                      ),
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                    )
+                            ],
                           ),
                         ),
-                        Text(
-                          TimeAgo.format(todo.createdAt),
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.textTheme.bodySmall?.color
-                                ?.withOpacity(0.7),
+                        //? Check and Optional
+                        SizedBox(
+                          height: screenHeight * 0.05,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Checkbox(
+                                value: todo.isCompleted,
+                                onChanged: (_) =>
+                                    _showToggleConfirmationDialog(context),
+                                activeColor: priorityColor,
+                                checkColor: theme.colorScheme.onPrimary,
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.more_vert),
+                                onPressed: () =>
+                                    _showTodoOptionsBottomSheet(context),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                    if (todo.description.isNotEmpty)
-                      Text(
-                        todo.description,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.textTheme.bodySmall?.color
-                              ?.withOpacity(0.7),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                  ],
+                  ),
                 ),
-              ),
-              Row(
-                children: [
-                  Checkbox(
-                    value: todo.isCompleted,
-                    onChanged: (_) => _showToggleConfirmationDialog(context),
-                    activeColor: priorityColor,
-                    checkColor: theme.colorScheme.onPrimary,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.more_vert),
-                    onPressed: () => _showTodoOptionsBottomSheet(context),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+              ));
   }
 
   void _showTodoOptionsBottomSheet(BuildContext context) {

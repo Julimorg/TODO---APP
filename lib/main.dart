@@ -38,9 +38,9 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Montserrat',
         dialogTheme: const DialogTheme(
           backgroundColor: Colors.white,
-          titleTextStyle: const TextStyle(
+          titleTextStyle: TextStyle(
               color: Colors.black, fontSize: 17, fontWeight: FontWeight.bold),
-          contentTextStyle: const TextStyle(
+          contentTextStyle: TextStyle(
               color: Colors.black, fontSize: 17, fontWeight: FontWeight.w400),
         ),
 

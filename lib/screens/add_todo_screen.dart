@@ -1,13 +1,15 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:todo_internship/widgets/scroll_date_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../models/todo_model.dart';
 import '../providers/todo_provider.dart';
 
 class AddTodoScreen extends StatefulWidget {
-
-   const AddTodoScreen({super.key});
+  const AddTodoScreen({super.key});
 
   @override
   _AddTodoScreenState createState() => _AddTodoScreenState();
@@ -18,18 +20,33 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
   final _descriptionController = TextEditingController();
   Priority _selectedPriority = Priority.low;
   final _formKey = GlobalKey<FormState>();
-
+  String formattedDate = "";
+  //? Show Date Picker
+  void _showDatePicker() {
+    showEditDateDialog(
+      context,
+      DateTime.now(),
+      (selectedDate) {
+        setState(() {
+          log(selectedDate);
+          formattedDate = selectedDate; // Cập nhật giá trị khi ngày đã chọn
+        });
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Create New Task',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
         ),
         centerTitle: true,
         elevation: 0,
@@ -42,36 +59,36 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Title Input
+                //? Title Input
                 _buildSectionHeader('Task Title', Icons.title),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _titleController,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter a title';  // Error message if the field is empty
+                      return 'Please enter a title'; // Error message if the field is empty
                     } else if (value.length > 80) {
                       return 'Title cannot be more than 50 characters'; // Error message if the title exceeds 50 characters
                     }
-                    return null;  // No error if the title is valid
+                    return null; // No error if the title is valid
                   },
                   decoration: _buildInputDecoration(
                     hintText: 'Enter task title',
                     prefixIcon: Icons.edit,
                   ),
                   inputFormatters: [
-                    LengthLimitingTextInputFormatter(80), // Limit to 50 characters
+                    LengthLimitingTextInputFormatter(
+                        80), // Limit to 50 characters
                   ],
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 20),
-
-                // Description Input
+                //? Description Input
                 _buildSectionHeader('Description', Icons.description),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _descriptionController,
-                  maxLines: 3,
+                  maxLines: 5,
                   decoration: _buildInputDecoration(
                     hintText: 'Add task details (optional)',
                     prefixIcon: Icons.notes,
@@ -79,8 +96,22 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 20),
-
-                // Priority Selector
+                //? Select Date
+                _buildSectionHeader(
+                    'Select your Date', Icons.date_range_outlined),
+                const SizedBox(height: 12),
+                TextField(
+                  readOnly: true,
+                  onTap: _showDatePicker,
+                  decoration: _buildInputDecoration(
+                    hintText: 'dd/mm/yyyy',
+                    prefixIcon: Icons.notes,
+                  ),
+                  controller: TextEditingController(text: formattedDate),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 20),
+                //? Priority Selector
                 _buildSectionHeader('Priority', Icons.flag),
                 const SizedBox(height: 12),
                 Container(
@@ -103,15 +134,19 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                     ),
                     items: Priority.values
                         .map((priority) => DropdownMenuItem(
-                      value: priority,
-                      child: Text(
-                        priority.toString().split('.').last.toUpperCase(),
-                        style: TextStyle(
-                          color: _getPriorityColor(priority),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ))
+                              value: priority,
+                              child: Text(
+                                priority
+                                    .toString()
+                                    .split('.')
+                                    .last
+                                    .toUpperCase(),
+                                style: TextStyle(
+                                  color: _getPriorityColor(priority),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ))
                         .toList(),
                     onChanged: (priority) {
                       setState(() {
@@ -122,7 +157,7 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // Save Button
+                //? Save Button
                 ElevatedButton(
                   onPressed: _saveTodo,
                   style: ElevatedButton.styleFrom(
@@ -143,10 +178,11 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                       const SizedBox(width: 12),
                       Text(
                         'Save Task',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                     ],
                   ),
@@ -159,7 +195,7 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
     );
   }
 
-  // Helper method to build section headers
+  //? Helper method to build section headers
   Widget _buildSectionHeader(String title, IconData icon) {
     return Row(
       children: [
@@ -168,15 +204,15 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
         Text(
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.deepPurple,
-          ),
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
         ),
       ],
     );
   }
 
-  // Helper method to create input decorations
+  //? Helper method to create input decorations
   InputDecoration _buildInputDecoration({
     required String hintText,
     required IconData prefixIcon,
@@ -199,7 +235,7 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
     );
   }
 
-  // Helper method to get priority color
+  //? Helper method to get priority color
   Color _getPriorityColor(Priority priority) {
     switch (priority) {
       case Priority.high:
