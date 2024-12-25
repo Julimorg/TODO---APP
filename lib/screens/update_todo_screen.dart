@@ -1,5 +1,10 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/todo_model.dart';
 import '../providers/todo_provider.dart';
@@ -7,10 +12,7 @@ import '../providers/todo_provider.dart';
 class UpdateTodoScreen extends StatefulWidget {
   final TodoModel todoToUpdate;
 
-  const UpdateTodoScreen({
-    super.key,
-    required this.todoToUpdate
-  });
+  const UpdateTodoScreen({super.key, required this.todoToUpdate});
 
   @override
   _UpdateTodoScreenState createState() => _UpdateTodoScreenState();
@@ -19,28 +21,78 @@ class UpdateTodoScreen extends StatefulWidget {
 class _UpdateTodoScreenState extends State<UpdateTodoScreen> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
+  DateTime? _selectedDate;
+  late TextEditingController _formattedDate;
   late Priority _selectedPriority;
+  late TextEditingController _imageDescription;
   final _formKey = GlobalKey<FormState>();
+  File? selectedImage;
 
+  bool changeAdd = true;
+//? Show Date Picker
+  void _showDatePicker() async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+        _formattedDate.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+      });
+    }
+  }
+
+  //? Adding Image from Gallery
+  Future _pickImageFromGallery() async {
+    final returnedImage =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (returnedImage != null) {
+      setState(() {
+        selectedImage = File(returnedImage.path);
+        log("$selectedImage");
+      });
+    } else {
+      log("No image selected.");
+    }
+  }
+
+  //? Cập nhật lại các giá trị đã lưu ở add_todo_screen
   @override
   void initState() {
     super.initState();
-    // Initialize controllers and priority with existing todo's data
+    //? Initialize controllers and priority with existing todo's data
     _titleController = TextEditingController(text: widget.todoToUpdate.title);
-    _descriptionController = TextEditingController(text: widget.todoToUpdate.description);
+    _descriptionController =
+        TextEditingController(text: widget.todoToUpdate.description);
+    _formattedDate = TextEditingController(
+      text: widget.todoToUpdate.setDateTime != null
+          ? DateFormat('dd/MM/yyyy').format(widget.todoToUpdate.setDateTime!)
+          : '',
+    );
+    _imageDescription = TextEditingController(
+      text: widget.todoToUpdate.imageDescription != null
+          ? widget.todoToUpdate.imageDescription
+          : '',
+    );
     _selectedPriority = widget.todoToUpdate.priority;
   }
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Update Task',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
         ),
         centerTitle: true,
         elevation: 0,
@@ -53,7 +105,7 @@ class _UpdateTodoScreenState extends State<UpdateTodoScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Title Input
+                //? Title Input
                 _buildSectionHeader('Task Title', Icons.title),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -77,21 +129,110 @@ class _UpdateTodoScreenState extends State<UpdateTodoScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Description Input
-                _buildSectionHeader('Description', Icons.description),
+                //? Description Input
+                Container(
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  changeAdd = true;
+                                });
+                              },
+                              child: _buildSectionHeader(
+                                  'Adding Text', Icons.description)),
+                          TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  changeAdd = false;
+                                });
+                              },
+                              child: _buildSectionHeader(
+                                  'Adding Image', Icons.image))
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      changeAdd
+                          //? Text Field Note
+                          ? TextFormField(
+                              controller: _descriptionController,
+                              maxLines: 5,
+                              decoration: _buildInputDecoration(
+                                hintText: 'Add task details (optional)',
+                                prefixIcon: Icons.notes,
+                              ),
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            )
+                          //? Image Note Picker
+                          : Column(children: [
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                child: Row(
+                                  children: [
+                                    TextButton(
+                                      onPressed: () {
+                                        _pickImageFromGallery();
+                                      },
+                                      child: const Center(
+                                          child: Text(
+                                        "Adding image!",
+                                      )),
+                                    ),
+                                    SizedBox(
+                                      width: screenWidth * 0.5,
+                                      height: screenHeight * 0.06,
+                                      child: TextFormField(
+                                        controller: _imageDescription,
+                                        maxLines: 1,
+                                        decoration: _buildInputDecoration(
+                                          hintText: 'Add image description',
+                                          prefixIcon: Icons.notes,
+                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              //TODO NEED TO SAVE IMAGE HERE!
+                              Container(
+                                // color: Colors.blue,
+                                width: screenWidth * 0.85,
+                                height: screenHeight * 0.4,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border:
+                                      Border.all(color: Colors.grey.shade300),
+                                ),
+                                child: selectedImage != null
+                                    ? Image.file(selectedImage!)
+                                    : const Text("Please selected your image!"),
+                              ),
+                            ])
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                //? Select Date
+                _buildSectionHeader(
+                    'Select your Date', Icons.date_range_outlined),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _descriptionController,
-                  maxLines: 3,
+                TextField(
+                  readOnly: true,
+                  onTap: _showDatePicker,
                   decoration: _buildInputDecoration(
-                    hintText: 'Add task details (optional)',
+                    hintText: 'dd/mm/yyyy',
                     prefixIcon: Icons.notes,
                   ),
+                  controller: _formattedDate,
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 20),
-
-                // Priority Selector
+                //? Priority Selector
                 _buildSectionHeader('Priority', Icons.flag),
                 const SizedBox(height: 12),
                 Container(
@@ -114,15 +255,19 @@ class _UpdateTodoScreenState extends State<UpdateTodoScreen> {
                     ),
                     items: Priority.values
                         .map((priority) => DropdownMenuItem(
-                      value: priority,
-                      child: Text(
-                        priority.toString().split('.').last.toUpperCase(),
-                        style: TextStyle(
-                          color: _getPriorityColor(priority),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ))
+                              value: priority,
+                              child: Text(
+                                priority
+                                    .toString()
+                                    .split('.')
+                                    .last
+                                    .toUpperCase(),
+                                style: TextStyle(
+                                  color: _getPriorityColor(priority),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ))
                         .toList(),
                     onChanged: (priority) {
                       setState(() {
@@ -154,10 +299,11 @@ class _UpdateTodoScreenState extends State<UpdateTodoScreen> {
                       const SizedBox(width: 12),
                       Text(
                         'Update Task',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                     ],
                   ),
@@ -179,9 +325,9 @@ class _UpdateTodoScreenState extends State<UpdateTodoScreen> {
         Text(
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.deepPurple,
-          ),
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
         ),
       ],
     );
@@ -224,11 +370,13 @@ class _UpdateTodoScreenState extends State<UpdateTodoScreen> {
     if (_formKey.currentState!.validate()) {
       // Create an updated todo with the same ID but new details
       final updatedTodo = TodoModel(
-        id: widget.todoToUpdate.id,  // Keep the original ID
+        id: widget.todoToUpdate.id, // Keep the original ID
         title: _titleController.text,
         description: _descriptionController.text,
         priority: _selectedPriority,
         createdAt: widget.todoToUpdate.createdAt,
+        setDateTime: _selectedDate,
+        imageDescription: _imageDescription.text,
       );
 
       Provider.of<TodoProvider>(context, listen: false).updateTodo(updatedTodo);
@@ -240,6 +388,7 @@ class _UpdateTodoScreenState extends State<UpdateTodoScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _formattedDate.dispose();
     super.dispose();
   }
 }

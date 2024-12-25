@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_internship/widgets/resuble_navigation_push.dart';
 import '../models/todo_model.dart';
@@ -210,7 +211,7 @@ class TodoListWidget extends StatelessWidget {
                   ),
                 ],
               )),
-          //TODO Chỉnh ListView và GridView tại đây
+
           //TODO Nên làm thêm Lazy Loading Tại Đây
           SizedBox(
               height: screenHeight * 0.73,
@@ -500,6 +501,9 @@ class TodoItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+    String setTime = todo.setDateTime != null
+        ? DateFormat('dd/MM/yyyy').format(todo.setDateTime!)
+        : 'No Date Set';
     final theme = Theme.of(context);
     final priorityColor = _getPriorityColor(context);
 
@@ -570,6 +574,16 @@ class TodoItemCard extends StatelessWidget {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                //? Set Time
+                                Text(
+                                  setTime,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.textTheme.bodySmall?.color
+                                        ?.withOpacity(0.7),
+                                  ),
+                                ),
+                                const SizedBox(width: 20),
+                                //? Priority
                                 Text(
                                   TimeAgo.format(todo.createdAt),
                                   style: theme.textTheme.bodyMedium?.copyWith(

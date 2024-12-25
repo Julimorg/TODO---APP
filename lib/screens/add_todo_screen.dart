@@ -1,9 +1,11 @@
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:todo_internship/widgets/scroll_date_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../models/todo_model.dart';
 import '../providers/todo_provider.dart';
@@ -18,21 +20,43 @@ class AddTodoScreen extends StatefulWidget {
 class _AddTodoScreenState extends State<AddTodoScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  Priority _selectedPriority = Priority.low;
+  final _formattedDate = TextEditingController();
+  final _imageDescription = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  String formattedDate = "";
+  DateTime? _selectedDate;
+  Priority _selectedPriority = Priority.low;
+  bool changeAdd = true;
+  File? selectedImage;
+
   //? Show Date Picker
-  void _showDatePicker() {
-    showEditDateDialog(
-      context,
-      DateTime.now(),
-      (selectedDate) {
-        setState(() {
-          log(selectedDate);
-          formattedDate = selectedDate; // Cập nhật giá trị khi ngày đã chọn
-        });
-      },
+  void _showDatePicker() async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
     );
+
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+        _formattedDate.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+      });
+    }
+  }
+
+  //? Adding Image from Gallery
+  Future _pickImageFromGallery() async {
+    final returnedImage =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (returnedImage != null) {
+      setState(() {
+        selectedImage = File(returnedImage.path);
+        log("$selectedImage");
+      });
+    } else {
+      log("No image selected.");
+    }
   }
 
   @override
@@ -84,16 +108,91 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                 ),
                 const SizedBox(height: 20),
                 //? Description Input
-                _buildSectionHeader('Description', Icons.description),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _descriptionController,
-                  maxLines: 5,
-                  decoration: _buildInputDecoration(
-                    hintText: 'Add task details (optional)',
-                    prefixIcon: Icons.notes,
+                Container(
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  changeAdd = true;
+                                });
+                              },
+                              child: _buildSectionHeader(
+                                  'Adding Text', Icons.description)),
+                          TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  changeAdd = false;
+                                });
+                              },
+                              child: _buildSectionHeader(
+                                  'Adding Image', Icons.image))
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      changeAdd
+                          //? Text Field Note
+                          ? TextFormField(
+                              controller: _descriptionController,
+                              maxLines: 5,
+                              decoration: _buildInputDecoration(
+                                hintText: 'Add task details (optional)',
+                                prefixIcon: Icons.notes,
+                              ),
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            )
+                          //? Image Note Picker
+                          : Column(children: [
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                child: Row(
+                                  children: [
+                                    TextButton(
+                                      onPressed: () {
+                                        _pickImageFromGallery();
+                                      },
+                                      child: const Center(
+                                          child: Text(
+                                        "Adding image!",
+                                      )),
+                                    ),
+                                    SizedBox(
+                                      width: screenWidth * 0.5,
+                                      height: screenHeight * 0.06,
+                                      child: TextFormField(
+                                        controller: _imageDescription,
+                                        maxLines: 1,
+                                        decoration: _buildInputDecoration(
+                                          hintText: 'Add image description',
+                                          prefixIcon: Icons.notes,
+                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              //TODO NEED TO SAVE IMAGE HERE!
+                              Container(
+                                // color: Colors.blue,
+                                width: screenWidth * 0.85,
+                                height: screenHeight * 0.4,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border:
+                                      Border.all(color: Colors.grey.shade300),
+                                ),
+                                child: selectedImage != null
+                                    ? Image.file(selectedImage!)
+                                    : const Text("Please selected your image!"),
+                              ),
+                            ])
+                    ],
                   ),
-                  style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 20),
                 //? Select Date
@@ -107,10 +206,11 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                     hintText: 'dd/mm/yyyy',
                     prefixIcon: Icons.notes,
                   ),
-                  controller: TextEditingController(text: formattedDate),
+                  controller: _formattedDate,
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 20),
+
                 //? Priority Selector
                 _buildSectionHeader('Priority', Icons.flag),
                 const SizedBox(height: 12),
@@ -247,13 +347,16 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
     }
   }
 
+  //? Save field
   void _saveTodo() {
     if (_formKey.currentState!.validate()) {
       final newTodo = TodoModel(
-        id: Uuid().v4(),
+        id: const Uuid().v4(),
         title: _titleController.text,
         description: _descriptionController.text,
+        setDateTime: _selectedDate,
         priority: _selectedPriority,
+        imageDescription: _imageDescription.text,
       );
 
       Provider.of<TodoProvider>(context, listen: false).addTodo(newTodo);
@@ -265,6 +368,8 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _formattedDate.dispose();
+    _imageDescription.dispose();
     super.dispose();
   }
 }

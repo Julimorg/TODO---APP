@@ -22,14 +22,25 @@ class TodoModel extends HiveObject {
   @HiveField(5)
   Priority priority;
 
+  //? Đã thêm một trường DateTime mới
+  //? Set DateTime? để tránh bị null
+  @HiveField(6)
+  DateTime? setDateTime;
+
+  @HiveField(7)
+  String imageDescription;
+
   TodoModel({
     required this.id,
     required this.title,
     this.description = '',
+    this.imageDescription = '',
+    DateTime? setDateTime,
     this.isCompleted = false,
     this.priority = Priority.low,
     DateTime? createdAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+  })  : createdAt = createdAt ?? DateTime.now(),
+        setDateTime = setDateTime ?? DateTime.now();
 }
 
 @HiveType(typeId: 1)

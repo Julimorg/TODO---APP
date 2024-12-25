@@ -303,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
           label: 'Completed',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_month_outlined),
+          icon: Icon(Icons.notification_important),
           label: 'Notification',
         ),
       ],
