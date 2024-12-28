@@ -7,16 +7,15 @@ part 'todo_model.g.dart';
 //Step 3: Thêm entity đó và Model Class --> để dễ truy xuất thông tin
 
 //Những model cần tạo
-//Pritory (giữ nguyên) 
+//Pritory (giữ nguyên)
 //TodoModel (Thêm imagePath, userId, trashId) --> Xử lý multitask như thế nào ? (progress)
-  // --> TableTodoModel (kTableName, kCol<Tên>)
+// --> TableTodoModel (kTableName, kCol<Tên>)
 //Notification (userId, notificationId, header, title, content, dateSent)
-  // --> TableNotification (kTableName, kCol<Tên>)
+// --> TableNotification (kTableName, kCol<Tên>)
 //User (userId (deviceId), deviceName)
-  // --> TableUser (kTableName, kCol<Tên>)
+// --> TableUser (kTableName, kCol<Tên>)
 //Trash (userId, trashId, dateDeleted)
-  // --> TableTrash (kTableName, kCol<Tên>)
-
+// --> TableTrash (kTableName, kCol<Tên>)
 
 @HiveType(typeId: 0)
 class TodoModel extends HiveObject {
@@ -50,7 +49,7 @@ class TodoModel extends HiveObject {
     required this.id,
     required this.title,
     this.description = '',
-    this.imageDescription = '', 
+    this.imageDescription = '',
     DateTime? setDateTime,
     this.isCompleted = false,
     this.priority = Priority.low,

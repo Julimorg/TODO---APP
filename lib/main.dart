@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
+import 'package:todo_internship/providers/multitask_provider.dart';
 import 'package:todo_internship/providers/theme_provider.dart';
 import 'package:todo_internship/providers/todo_provider.dart';
 import 'package:todo_internship/screens/splash_screen.dart';
@@ -13,6 +14,7 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (context) => TodoProvider()),
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
       ],

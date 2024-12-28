@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:todo_internship/providers/multitask_provider.dart';
 import 'package:todo_internship/widgets/todo_list_widget.dart';
 import '../models/todo_model.dart';
 import '../providers/todo_provider.dart';
@@ -34,6 +35,12 @@ class TaskDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //? CHỖ NÀY BUILD THÊM 1 PROVIDER ĐỂ ADD MULTITASK (multitask_provider.dart)
+    //? NHƯNG KHÔNG CÓ ID CỤ THỂ CHO NÊN NOTE NÀO CŨNG BỊ TRÙNG MULTITASK
+    //TODO BE EDIT CHỖ NÀY
+    final taskProvider = Provider.of<TaskProvider>(context);
+    TextEditingController taskController = TextEditingController();
+
     final theme = Theme.of(context);
     String createdTime = TimeAgo.format(todo.createdAt);
     String setTime = todo.setDateTime != null
@@ -68,102 +75,102 @@ class TaskDetailsScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            //? Animated Header with Gradient
-            Container(
-              width: double.infinity,
-              height: 300,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    _getPriorityColor(),
-                    _getPriorityColor().withOpacity(0.7),
-                    _getPriorityColor().withOpacity(0.4),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+      body: Container(
+        // color: Colors.blueGrey,
+        // height: screenHeight * 1,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              //? Animated Header with Gradient
+              Container(
+                width: double.infinity,
+                height: 300,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      _getPriorityColor(),
+                      _getPriorityColor().withOpacity(0.7),
+                      _getPriorityColor().withOpacity(0.4),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
                 ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 20),
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        //? Title and Priority Note
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          // mainAxisSize: MainAxisSize.max,
-                          children: [
-                            Text(
-                              todo.title,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .displayLarge
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                              softWrap: true,
-                              maxLines: 4,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(width: 20),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                _getPriorityText(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          //? Title and Priority Note
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            // mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Text(
+                                todo.title,
                                 style: Theme.of(context)
                                     .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(color: Colors.white),
+                                    .displayLarge
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                softWrap: true,
+                                maxLines: 4,
+                                overflow: TextOverflow.ellipsis,
                               ),
+                              const SizedBox(width: 20),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  _getPriorityText(),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          //? Created Time
+                          Text(
+                            "Created: $createdTime ago",
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.textTheme.bodySmall?.color
+                                  ?.withOpacity(0.7),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        //? Created Time
-                        Text(
-                          "Created: $createdTime ago",
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.textTheme.bodySmall?.color
-                                ?.withOpacity(0.7),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        //? Set Time
-                        Text(
-                          "Date: $setTime",
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.textTheme.bodySmall?.color
-                                ?.withOpacity(0.7),
+                          const SizedBox(height: 10),
+                          //? Set Time
+                          Text(
+                            "Date: $setTime",
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.textTheme.bodySmall?.color
+                                  ?.withOpacity(0.7),
+                            ),
                           ),
-                        ),
-                      ]),
+                        ]),
+                  ),
                 ),
               ),
-            ),
 
-            //? Task Details Section
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
-                child: Container(
-                  // color: Colors.blue,
-                  height: screenHeight * 0.8,
+              //? Task Details Section
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                child: SizedBox(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -209,25 +216,112 @@ class TaskDetailsScreen extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
                       const SizedBox(height: 12),
-                      //? Image Description
-                      _buildSectionHeader(context, "Image Description",
-                          Icons.image_aspect_ratio),
-                      Text(
-                        todo.imageDescription.isNotEmpty
-                            ? todo.imageDescription
-                            : "No image description provided.",
-                        style: Theme.of(context).textTheme.bodyLarge,
+                      //? Create checklist box
+                      Container(
+                        width: screenWidth,
+                        height: screenHeight * 0.25,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Column(children: [
+                          //? Input field để thêm task
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: taskController,
+                                    decoration: const InputDecoration(
+                                      labelText: "Enter your task...",
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    if (taskController.text.isNotEmpty) {
+                                      taskProvider.addTask(taskController.text);
+                                      taskController.clear();
+                                    }
+                                  },
+                                  child: const Text("Add Task"),
+                                ),
+                              ],
+                            ),
+                          ),
+                          //? List check box
+                          Container(
+                            // padding: EdgeInsets.zero,
+                            // color: Colors.blue,
+                            height: screenHeight * 0.15,
+                            child: ListView.builder(
+                              padding: EdgeInsets
+                                  .zero, // cho default padding không là bị lỗi layout
+
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: taskProvider.tasks.length,
+                              itemBuilder: (context, index) {
+                                final task = taskProvider.tasks[index];
+                                return ListTile(
+                                  leading: Checkbox(
+                                    value: task.isChecked,
+                                    onChanged: (value) {
+                                      taskProvider.toggleTask(index);
+                                    },
+                                  ),
+                                  title: Text(
+                                    task.name,
+                                    //? Check Task
+                                    style: TextStyle(
+                                      decoration: task.isChecked
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                      color:
+                                          task.isChecked ? Colors.grey : null,
+                                    ),
+                                  ),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.delete,
+                                        color: Colors.red),
+                                    onPressed: () {
+                                      taskProvider.removeTask(index);
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ]),
                       ),
+
                       const SizedBox(height: 12),
                       //? Image
-                      _buildSectionHeader(
-                          context, "Your Image", Icons.image_outlined),
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildSectionHeader(
+                                context, "Your Image", Icons.image_outlined),
+                            Container(
+                              color: Colors.grey,
+                              width: 1,
+                              height: 20,
+                            ),
+                            Text(
+                              todo.imageDescription.isNotEmpty
+                                  ? todo.imageDescription
+                                  : "No description provided.",
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                          ]),
                       const SizedBox(height: 24),
                       //TODO DISPLAY IMAGE
                       Container(
                         // color: Colors.blue,
-                        width: screenWidth * 0.85,
-                        height: screenHeight * 0.4,
+                        width: screenWidth * 1,
+                        height: screenHeight * 0.3,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.grey.shade300),
@@ -239,8 +333,8 @@ class TaskDetailsScreen extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
