@@ -23,15 +23,16 @@ class _HomeScreenState extends State<HomeScreen> {
       TextEditingController(); //--> Check empty field
   int _selectedIndex = 0;
   bool isChangeView = false; //--> Change View for todo_list_widget
-  //? Show dialog when input field is empty
-  void _onSearch() {
-    if (_controller.text.trim().isEmpty) {
-      _showDeleteConfirmationDialog(context);
-    } else {
-      // Xử lý logic tìm kiếm tại đây
-      print('Đang tìm kiếm: ${_controller.text}');
-    }
-  }
+
+  // //? Show dialog when input field is empty
+  // void _onSearch() {
+  //   if (_controller.text.trim().isEmpty) {
+  //     _showDeleteConfirmationDialog(context);
+  //   } else {
+  //     // Xử lý logic tìm kiếm tại đây
+  //     print('Đang tìm kiếm: ${_controller.text}');
+  //   }
+  // }
 
   void _showDeleteConfirmationDialog(BuildContext context) {
     showDialog(
@@ -223,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           subtitle:
                               const Text("Change your view from list to grid"),
                           onTap: () {
-                            setState(() {
+                            setState(() { //Do không dùng NotifierValue nên phải setState
                               isChangeView = !isChangeView;
                               String text = isChangeView.toString();
                               print("$text");

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -55,12 +57,24 @@ class TodoListWidget extends StatelessWidget {
       if (_controller.text.trim().isEmpty) {
         _showAlertDialog(context);
       }
+      else{
+        log(_controller.text.trim()); //Filter by title and content
+      }
     }
+
+    void _onFilter(Priority priority) {
+      log(priority.name); //Filter by priority name;
+    }
+
 
     //? [1] Sử dụng ValueNotiFier để dễ hơn trong việc quản lý trạng thái
     //? mà không cần setSate hay phải tạo thêm 1 constructor cho widget cha
     final ValueNotifier<Priority> _priorityNotifier =
-        ValueNotifier(Priority.medium);
+        ValueNotifier(_selectedPriority);
+
+    ValueNotifier<List<TodoModel>> _displayedToDoList = 
+        ValueNotifier(todos);
+
     //? Helper method to get priority color
     Color _getPriorityColor(Priority priority) {
       switch (priority) {
@@ -74,7 +88,7 @@ class TodoListWidget extends StatelessWidget {
     }
 
     //? Check Item is Empty
-    if (todos.isEmpty) {
+    if (_displayedToDoList.value.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -192,6 +206,7 @@ class TodoListWidget extends StatelessWidget {
                                   .toList(),
                               onChanged: (priority) {
                                 if (priority != null) {
+                                  //Không cần setState
                                   _priorityNotifier.value = priority;
                                 }
                               },
@@ -199,7 +214,9 @@ class TodoListWidget extends StatelessWidget {
                       }),
                   const SizedBox(width: 8),
                   ElevatedButton(
-                    onPressed: _onSearch,
+                    onPressed: () {
+                      _onFilter(_priorityNotifier.value);
+                    }, //Đổi thành on filter
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10.0, vertical: 10.0),
@@ -217,10 +234,10 @@ class TodoListWidget extends StatelessWidget {
               height: screenHeight * 0.73,
               width: screenWidth * 1,
               child: isChangeView
-                  ? ListView.builder(
-                      itemCount: todos.length,
+                  ? ListView.builder( //List view
+                      itemCount: _displayedToDoList.value.length,
                       itemBuilder: (context, index) {
-                        final todo = todos[index];
+                        final todo = _displayedToDoList.value[index];
                         return TodoItemCard(
                           todo: todo,
                           isChangeView: true,
@@ -228,16 +245,16 @@ class TodoListWidget extends StatelessWidget {
                             begin: 1, duration: 300.ms, curve: Curves.easeOut);
                       },
                     )
-                  : GridView.builder(
+                  : GridView.builder( //List view
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 20,
                         mainAxisSpacing: 10,
                       ),
-                      itemCount: todos.length,
+                      itemCount: _displayedToDoList.value.length,
                       itemBuilder: (context, index) {
-                        final todo = todos[index];
+                        final todo = _displayedToDoList.value[index];
                         return TodoItemCard(
                           todo: todo,
                           isChangeView: false,

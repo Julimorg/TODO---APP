@@ -112,6 +112,7 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                   child: Column(
                     children: [
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           TextButton(
                               onPressed: () {
@@ -120,7 +121,7 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                                 });
                               },
                               child: _buildSectionHeader(
-                                  'Adding Text', Icons.description)),
+                                  'Description', Icons.description)),
                           TextButton(
                               onPressed: () {
                                 setState(() {
@@ -128,7 +129,7 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                                 });
                               },
                               child: _buildSectionHeader(
-                                  'Adding Image', Icons.image))
+                                  'Image', Icons.image))
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -161,16 +162,20 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                                     SizedBox(
                                       width: screenWidth * 0.5,
                                       height: screenHeight * 0.06,
-                                      child: TextFormField(
-                                        controller: _imageDescription,
-                                        maxLines: 1,
-                                        decoration: _buildInputDecoration(
-                                          hintText: 'Add image description',
-                                          prefixIcon: Icons.notes,
+                                      child: 
+                                      Container(
+                                        child: TextFormField(
+                                          textAlign: TextAlign.justify,
+                                          controller: _imageDescription,
+                                          maxLines: 1,
+                                          decoration: _buildInputDecoration(
+                                            hintText: 'Image title',
+                                            prefixIcon: Icons.notes,
+                                          ),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyLarge,
                                         ),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge,
                                       ),
                                     )
                                   ],
@@ -188,7 +193,10 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                                 ),
                                 child: selectedImage != null
                                     ? Image.file(selectedImage!)
-                                    : const Text("Please selected your image!"),
+                                    : Container(
+                                      margin: EdgeInsets.only(top: 10, left: 10),
+                                      child: const Text("Please selected your image!")
+                                    ),
                               ),
                             ])
                     ],
@@ -318,6 +326,10 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
     required IconData prefixIcon,
   }) {
     return InputDecoration(
+      hintStyle: const TextStyle(
+        backgroundColor: Colors.transparent
+      ),
+
       hintText: hintText,
       prefixIcon: Icon(prefixIcon, color: Colors.deepPurple),
       border: OutlineInputBorder(
